@@ -85,12 +85,11 @@ async def cmd_start(message: types.Message):
         "`/search <query>` — Album search karein\n"
         "`/view_<album_id>` — Album photos dekhein\n"
         "`/stats` — Cloud stats dekhein\n"
-        "`/cancel` — Current session cancel karein
-
-**Access Management (Owner only):**
-`/grant <id/@user>` — Kisi ko bot access dein
-`/denied <id/@user>` — Access wapis lo
-`/grantlist` — Saare granted users dekhein"
+        "`/cancel` — Current session cancel karein\n\n"
+        "**Access Management (Owner only):**\n"
+        "`/grant <id/@user>` — Kisi ko bot access dein\n"
+        "`/denied <id/@user>` — Access wapis lo\n"
+        "`/grantlist` — Saare granted users dekhein"
     )
     await message.answer(text, parse_mode="Markdown")
 
@@ -452,20 +451,14 @@ async def cmd_rename(message: types.Message):
         old_name, new_name = quoted[0].strip(), quoted[1].strip()
     elif len(quoted) == 1:
         return await message.answer(
-            "❌ Dono naam quotes mein likhein!
-"
-            "Example: `/rename 'Holi 2026' 'Holi Shayari'`",
+            "❌ Dono naam quotes mein likhein!\nExample: `/rename 'Holi 2026' 'Holi Shayari'`",
             parse_mode="Markdown"
         )
     else:
         simple = text.split()
         if len(simple) < 2:
             return await message.answer(
-                "❌ **Usage:**
-"
-                "• Space wale naam: `/rename 'Holi 2026' 'Holi Shayari'`
-"
-                "• Simple naam: `/rename OldName NewName`",
+                "❌ **Usage:**\n• Space wale naam: `/rename 'Holi 2026' 'Holi Shayari'`\n• Simple naam: `/rename OldName NewName`",
                 parse_mode="Markdown"
             )
         old_name, new_name = simple[0].strip(), simple[1].strip()
