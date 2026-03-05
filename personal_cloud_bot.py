@@ -165,8 +165,7 @@ async def handle_photo(message: types.Message):
     if count == 1 or count % 5 == 0:
         await message.reply(
             f"✅ Photo #{count} add ho gayi!\n"
-            f"_Tab bhi bhejte rahein... `/close` ya `/save_add` se finish karein._",
-            parse_mode="Markdown"
+            f"Bas bhejte rahein... /close ya /save_add se finish karein."
         )
 
 
