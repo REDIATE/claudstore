@@ -1,0 +1,21 @@
+{
+  "name": "personal-cloud-telegram-bot",
+  "version": "1.0.0",
+  "description": "Complete Personal Cloud Telegram Bot with MongoDB + private channel storage",
+  "main": "telegram_cloud_bot.js",
+  "scripts": {
+    "start": "node telegram_cloud_bot.js",
+    "dev": "nodemon telegram_cloud_bot.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "mongoose": "^8.4.1",
+    "node-telegram-bot-api": "^0.66.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
