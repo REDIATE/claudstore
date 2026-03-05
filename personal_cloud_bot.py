@@ -252,15 +252,41 @@ async def process_confirm(callback: types.CallbackQuery):
             await albums_col.insert_one(album_doc)
 
             # 9) Backup to Storage Channel
+            user = callback.from_user
+            user_info = f"@{user.username}" if user.username else f"ID: {user.id}"
+
+            # Step 1: Album creation info message
+            await bot.send_message(
+                STORAGE_CHANNEL,
+                f"📁 **Create Album**\n"
+                f"Name: {session['name']}\n"
+                f"Created by: {user_info}",
+                parse_mode="Markdown"
+            )
+
+            # Step 2: Send all photos to channel
+            photos = session['photos']
+            for i in range(0, len(photos), 10):
+                batch = photos[i:i+10]
+                media_group = [types.InputMediaPhoto(media=fid) for fid in batch]
+                try:
+                    await bot.send_media_group(STORAGE_CHANNEL, media=media_group)
+                except Exception as ex:
+                    logger.error(f"Channel photo send error: {ex}")
+                await asyncio.sleep(0.3)
+
+            # Step 3: Summary message with photo range
             await bot.send_message(
                 STORAGE_CHANNEL,
                 f"✅ **Album Saved & Stored**\n"
                 f"🆔 ID: `{album_id}`\n"
                 f"📁 Name: {session['name']}\n"
-                f"🖼 Photos: {len(session['photos'])}\n"
-                f"🕐 Time: {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+                f"🖼 Photos: {len(photos)}\n"
+                f"🕐 Time: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+                f"Chat ID: 1 to {len(photos)}",
                 parse_mode="Markdown"
             )
+
 
             await callback.message.edit_caption(
                 caption=f"✅ **Album Saved Successfully!**\n\n"
@@ -362,16 +388,48 @@ async def save_add(message: types.Message):
             }
         )
 
-        # 9) Backup log
+        # 9) Backup log - send to channel with photos
+        user = message.from_user
+        user_info = f"@{user.username}" if user.username else f"ID: {user.id}"
+
+        # Get current album to know existing photo count
+        current_album = await albums_col.find_one({"_id": session["db_id"]})
+        existing_count = (current_album.get("count", 0) - len(session["photos"])) if current_album else 0
+        start_num = existing_count + 1
+        end_num = existing_count + len(session["photos"])
+
+        # Step 1: Photo added info message
+        await bot.send_message(
+            STORAGE_CHANNEL,
+            f"📁 **Photo Added**\n"
+            f"Name: {session['name']}\n"
+            f"Created by: {user_info}",
+            parse_mode="Markdown"
+        )
+
+        # Step 2: Send only new photos to channel
+        new_photos = session['photos']
+        for i in range(0, len(new_photos), 10):
+            batch = new_photos[i:i+10]
+            media_group = [types.InputMediaPhoto(media=fid) for fid in batch]
+            try:
+                await bot.send_media_group(STORAGE_CHANNEL, media=media_group)
+            except Exception as ex:
+                logger.error(f"Channel add photo error: {ex}")
+            await asyncio.sleep(0.3)
+
+        # Step 3: Summary with photo range
         await bot.send_message(
             STORAGE_CHANNEL,
             f"➕ **Photos Added**\n"
             f"📁 Album: {session['name']}\n"
             f"🆔 ID: `{session['album_id']}`\n"
             f"🖼 Added: {len(session['photos'])} photos\n"
-            f"🕐 {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+            f"🕐 {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+            f"Chat ID: {start_num} to {end_num}",
             parse_mode="Markdown"
         )
+
 
         await message.answer(
             f"✅ **{len(session['photos'])} photos** add ho gayi hain!\n"
@@ -820,6 +878,25 @@ async def cmd_grant(message: types.Message):
             f"Ab yeh user bot ke saare features use kar sakta hai.",
             parse_mode="Markdown"
         )
+        # Greeting message to newly granted user
+        try:
+            now = datetime.now()
+            try:
+                user_chat = await bot.get_chat(user_id)
+                first_name = user_chat.first_name or "Friend"
+            except:
+                first_name = "Friend"
+            await bot.send_message(
+                user_id,
+                f"👋 **HEY {first_name}!**\n\n"
+                f"🎉 **Grant Access Successfully!**\n\n"
+                f"🥳 **ENJOY!!**\n\n"
+                f"📅 **Access Date:** {now.strftime('%d %B %Y')}\n"
+                f"🕐 **Access Time:** {now.strftime('%I:%M %p')}",
+                parse_mode="Markdown"
+            )
+        except Exception as e:
+            logger.warning(f"Could not send greeting to {user_id}: {e}")
 
     # @username diya
     elif target.startswith("@"):
@@ -839,6 +916,25 @@ async def cmd_grant(message: types.Message):
                 f"👤 @{username} | 🆔 `{user_id}`",
                 parse_mode="Markdown"
             )
+            # Greeting message to newly granted user
+            try:
+                now = datetime.now()
+                try:
+                    user_chat = await bot.get_chat(user_id)
+                    first_name = user_chat.first_name or "Friend"
+                except:
+                    first_name = username or "Friend"
+                await bot.send_message(
+                    user_id,
+                    f"👋 **HEY {first_name}!**\n\n"
+                    f"🎉 **Grant Access Successfully!**\n\n"
+                    f"🥳 **ENJOY!!**\n\n"
+                    f"📅 **Access Date:** {now.strftime('%d %B %Y')}\n"
+                    f"🕐 **Access Time:** {now.strftime('%I:%M %p')}",
+                    parse_mode="Markdown"
+                )
+            except Exception as e:
+                logger.warning(f"Could not send greeting to {user_id}: {e}")
         else:
             # Username se grant kar do, jab pehli baar message karega tab activate hoga
             await db.granted_users.update_one(
